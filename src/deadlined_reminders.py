@@ -17,6 +17,17 @@ class DeadlinedReminder(ABC, Iterable):
     def is_due(self):
         pass
 
+    @classmethod
+    def __subclasshook__(cls, subclass):
+        if cls is not DeadlinedReminder:
+            return NotImplemented
+
+        def attr_in_hierarchy(attr):
+            return any(attr in SuperClass.__dict__ for SuperClass in subclass.__mro__)
+        if not all(attr_in_hierarchy(attr) for attr in ('__iter__', 'is_due')):
+            return NotImplemented
+        return True
+
 
 class DateReminder(DeadlinedReminder):
 
@@ -25,10 +36,7 @@ class DateReminder(DeadlinedReminder):
         self.text = text
         
     def is_due(self):
-        if self.date <= datetime.now():
-            return True
-        else:
-            return False
+        return self.date < datetime.now()
 
     def __iter__(self):
-        iter([self.text, self.date.isoformat()])
+        return iter([self.text, self.date.isoformat()])
